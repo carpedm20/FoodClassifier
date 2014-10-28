@@ -3,7 +3,7 @@
 # N.B. set the path to the imagenet train + val data dirs
 
 EXAMPLE=examples/food100
-DATA=examples/food100
+DATA=data/food100
 TOOLS=build/tools
 
 TRAIN_DATA_ROOT=/home/carpedm20/data/food100/
@@ -45,9 +45,8 @@ GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_width=$RESIZE_WIDTH \
     --shuffle \
     $TRAIN_DATA_ROOT \
-    $DATA/train_0_9.txt \
-    $EXAMPLE/ilsvrc12_train_lmdb
-    #$DATA/train.txt \
+    $DATA/train.txt \
+    $EXAMPLE/food100_train_lmdb
 
 echo "Creating val lmdb..."
 
@@ -56,8 +55,7 @@ GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_width=$RESIZE_WIDTH \
     --shuffle \
     $VAL_DATA_ROOT \
-    $DATA/val_0_9.txt \
-    $EXAMPLE/ilsvrc12_val_lmdb
-    #$DATA/val.txt \
+    $DATA/val.txt \
+    $EXAMPLE/food100_val_lmdb
 
 echo "Done."

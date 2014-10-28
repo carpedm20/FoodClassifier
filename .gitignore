@@ -1,3 +1,7 @@
+0_make_label
+food100_train_lmdb
+food100_val_lmdb
+
 # Created by https://www.gitignore.io
 
 ### vim ###

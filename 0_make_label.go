@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
+  "fmt"
   "bufio"
-	"io/ioutil"
+  "io/ioutil"
   "os"
   "bytes"
   "math/rand"
@@ -30,8 +30,8 @@ func main() {
   val_f, _ := os.Create(VAL_FILE)
   val_w := bufio.NewWriter(val_f)
 
-	files, _ := ioutil.ReadDir(TRAIN_DATA_ROOT)
-	for _, parent := range files {
+  files, _ := ioutil.ReadDir(TRAIN_DATA_ROOT)
+  for _, parent := range files {
     if (parent.Name() != "Linux_doc" && parent.IsDir()) {
       var buffer bytes.Buffer
 
@@ -62,7 +62,7 @@ func main() {
         }
       }
     }
-	}
+  }
 
   train_w.Flush()
   val_w.Flush()

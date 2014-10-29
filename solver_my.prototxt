@@ -1,0 +1,53 @@
+net: "/home/carpedm20/git/caffe/examples/food100/train_val.prototxt"
+
+#  transform_param {
+#    mirror: true # randomly mirror data
+#    crop_size: 227 # randomly crop an image
+#    mean_file: "data/food100/food100_mean.binaryproto" # mean subtraction
+#  }
+
+# Blob       : Num(batch), Channels, Height and Width
+# Input data : 256 x 3 x 227 x 227 for ImageNet train input
+# conv1 data : 96 x 3 x 11 x 11 for CaffeNet conv1
+
+# Number / N is the batch size of the data. Batch processing achieves better throughput for communication and device processing. For an ImageNet training batch of 256 images B = 256.
+# Channel / K is the feature dimension e.g. for RGB images K = 3.
+
+# batch_size: 256 # Every iteration caffe process a batch, in this case the batch_size is the number of images that each batch will contain.
+
+# test_iter specifies how many forward passes the test should carry out.
+# In the case of MNIST, we have test batch size 100 and 100 test iterations,
+# covering the full 10,000 testing images.
+# In the case of food100, we have test batch size 384 and 1000 test iterations,
+# covering the full 384,000 testing images.
+test_iter: 1000
+
+# Carry out testing every 1000 training iterations.
+test_interval: 500
+
+# The base learning rate, momentum and the weight decay of the network.
+base_lr: 0.01
+momentum: 0.9
+
+# The learning rate policy
+lr_policy: "step"
+gamma: 0.1
+weight_decay: 0.0005
+#stepsize: 100000
+stepsize: 5000
+
+# Display every 100 iterations
+display: 20
+
+# The maximum number of iterations
+#max_iter: 450000
+max_iter: 50000
+
+# https://groups.google.com/forum/#!searchin/caffe-users/max_iter/caffe-users/H1epEI6jbZM/qry5OZTEfPAJ
+
+# snapshot intermediate results
+snapshot: 10000
+snapshot_prefix: "/home/carpedm20/git/caffe/examples/food100/food100_train_my"
+
+solver_mode: GPU
+

@@ -17,6 +17,13 @@ func Shuffle(a []os.FileInfo) {
   }
 }
 
+  
+func check(e error) {
+  if e != nil {
+    panic(e)
+  }
+}
+
 func main() {
   TRAIN_DATA_ROOT := "/home/carpedm20/data/food100/"
   //VAL_DATA_ROOT := "/home/carpedm20/data/food100/"
@@ -24,10 +31,12 @@ func main() {
   TRAIN_FILE := "../../data/food100/train.txt"
   VAL_FILE := "../../data/food100/val.txt"
 
-  train_f, _ := os.Create(TRAIN_FILE)
+  train_f, err := os.Create(TRAIN_FILE)
+  check(err)
   train_w := bufio.NewWriter(train_f)
 
-  val_f, _ := os.Create(VAL_FILE)
+  val_f, err := os.Create(VAL_FILE)
+  check(err)
   val_w := bufio.NewWriter(val_f)
 
   files, _ := ioutil.ReadDir(TRAIN_DATA_ROOT)

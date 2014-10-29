@@ -1,17 +1,18 @@
+name: "CaffeNet"
 layers {
   name: "data"
   type: DATA
   top: "data"
   top: "label"
   data_param {
-    source: "examples/food100/food_train_lmdb"
+    source: "examples/food100/food100_train_lmdb"
     backend: LMDB
     batch_size: 256
   }
   transform_param {
-    mirror: true # randomly mirror data
-    crop_size: 227 # randomly crop an image
-    mean_file: "data/food100/food100_mean.binaryproto" # mean subtraction
+    crop_size: 227
+    mean_file: "data/food100/food100_mean.binaryproto"
+    mirror: true
   }
   include: { phase: TRAIN }
 }
@@ -26,9 +27,9 @@ layers {
     batch_size: 50
   }
   transform_param {
-    mirror: false
     crop_size: 227
     mean_file: "data/food100/food100_mean.binaryproto"
+    mirror: false
   }
   include: { phase: TEST }
 }
@@ -37,9 +38,9 @@ layers {
   type: CONVOLUTION
   bottom: "data"
   top: "conv1"
-  blobs_lr: 1 # ratio that is multiplied on the global learning rate
+  blobs_lr: 1
   blobs_lr: 2
-  weight_decay: 1 # multiplied on the global weight decay
+  weight_decay: 1
   weight_decay: 0
   convolution_param {
     num_output: 96
@@ -339,7 +340,6 @@ layers {
 layers {
   name: "loss"
   type: SOFTMAX_LOSS
-  #type: SOFTMAX
   bottom: "fc8"
   bottom: "label"
   top: "loss"

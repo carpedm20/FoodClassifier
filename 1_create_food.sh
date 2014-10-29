@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
-# Create the imagenet lmdb inputs
-# N.B. set the path to the imagenet train + val data dirs
+# Create the food100 lmdb inputs
+# N.B. set the path to the food100 train + val data dirs
 
 EXAMPLE=examples/food100
 DATA=data/food100
@@ -9,7 +9,7 @@ TOOLS=build/tools
 TRAIN_DATA_ROOT=/home/carpedm20/data/food100/
 VAL_DATA_ROOT=/home/carpedm20/data/food100/
 
-# Set RESIZE=true to resize the images to 256x256. Leave as false if images have
+# Set RESIZE=true to resize the food100 to 256x256. Leave as false if food100 have
 # already been resized using another tool.
 RESIZE=true
 if $RESIZE; then
@@ -22,23 +22,23 @@ fi
 
 if [ ! -d "$TRAIN_DATA_ROOT" ]; then
   echo "Error: TRAIN_DATA_ROOT is not a path to a directory: $TRAIN_DATA_ROOT"
-  echo "Set the TRAIN_DATA_ROOT variable in create_imagenet.sh to the path" \
+  echo "Set the TRAIN_DATA_ROOT variable in create_food.sh to the path" \
        "where the ImageNet training data is stored."
   exit 1
 fi
 
 if [ ! -d "$VAL_DATA_ROOT" ]; then
   echo "Error: VAL_DATA_ROOT is not a path to a directory: $VAL_DATA_ROOT"
-  echo "Set the VAL_DATA_ROOT variable in create_imagenet.sh to the path" \
+  echo "Set the VAL_DATA_ROOT variable in create_food.sh to the path" \
        "where the ImageNet validation data is stored."
   exit 1
 fi
 
 echo "Creating train lmdb..."
 
-# have to run below commands before run ./examples/imagenet/create_imagenet.sh
-# rm -rf examples/imagenet/ilsvrc12_train_lmdb/
-# rm -rf examples/imagenet/ilsvrc12_val_lmdb/
+# have to run below commands before run ./examples/food100/create_food.sh
+# rm -rf examples/food100/food100_train_lmdb/
+# rm -rf examples/food100/food100_val_lmdb/
 
 GLOG_logtostderr=1 $TOOLS/convert_imageset \
     --resize_height=$RESIZE_HEIGHT \

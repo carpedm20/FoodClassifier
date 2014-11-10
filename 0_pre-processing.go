@@ -9,6 +9,7 @@ import (
     "bufio"
     "strings"
     "runtime"
+    "strconv"
     "io/ioutil"
 
     "github.com/disintegration/gift"
@@ -46,7 +47,15 @@ func main() {
 
             for _, child := range p {
                 if (child.Name() != "bb_info.txt") {
-                    image_num = 
+                    idx := strings.Index(child.Name(), ".jpg")
+                    if idx == -1 {
+                        panic("no *.jpg in " + child.Name())
+                    }
+
+                    c := crop_map[child.Name()[:idx]]
+                    //fmt.Println(strconv.Atoi(c[0]))
+                    fmt.Println(child.Name() + " : " + strings.Join(c, ", "))
+
                     f, err := os.Open(current_dir + child.Name())
 
                     if err != nil {
@@ -55,8 +64,14 @@ func main() {
 
                     img, err := jpeg.Decode(f)
 
+                    x0, _ := strconv.Atoi(c[0])
+                    y0, _ := strconv.Atoi(c[1])
+                    x1, _ := strconv.Atoi(c[2])
+                    y1, _ := strconv.Atoi(c[3])
+
                     g := gift.New(
-                        gift.Crop(image.Rect(100, 100, 200, 200)),
+                        gift.Crop(image.Rect(x0, y0, x1, y1)),
+                        //gift.Crop(image.Rect(0, 0, 10, 10)),
                     )
 
                     dst := image.NewRGBA(g.Bounds(img.Bounds()))

@@ -5,7 +5,6 @@ import (
     "image/jpeg"
     "os"
     "fmt"
-    "log"
     "bufio"
     "strings"
     "runtime"
@@ -30,7 +29,7 @@ func crop(img_name string, crop_map map[string][]string, current_dir string) {
     f, _ := os.Open(f_path)
     defer f.Close()
 
-    img, err := jpeg.Decode(f)
+    img, _ := jpeg.Decode(f)
 
     /**********
      *  Crop
@@ -58,60 +57,60 @@ func crop(img_name string, crop_map map[string][]string, current_dir string) {
      *  Flip
      **********/
 
-    g := gift.New(
+    g = gift.New(
         gift.FlipHorizontal(),
     )
 
     dst := image.NewRGBA(g.Bounds(crop.Bounds()))
     g.Draw(dst, crop)
 
-    crop_f_path := current_dir + "/crop_" + img_name
-    out, _ := os.Create(crop_f_path)
+    crop_f_path = current_dir + "/crop_" + img_name
+    out, _ = os.Create(crop_f_path)
     defer out.Close()
 
     jpeg.Encode(out, dst, nil)
 
-        /***********
+    /***********
      *  Rotate
      ***********/
 
-    g := gift.New(
-        gift.Rotate90()
+    g = gift.New(
+        gift.Rotate90(),
     )
 
-    dst := image.NewRGBA(g.Bounds(crop.Bounds()))
+    dst = image.NewRGBA(g.Bounds(crop.Bounds()))
     g.Draw(dst, crop)
-
-    out, _ := os.Create(crop_f_path)
-    defer out.Close()
 
     trans_f_path := current_dir + "/rotate90_" + img_name
-    jpeg.Encode(out, dst, nil)
-
-    g := gift.New(
-        gift.Rotate180()
-    )
-
-    dst := image.NewRGBA(g.Bounds(crop.Bounds()))
-    g.Draw(dst, crop)
-
-    out, _ := os.Create(crop_f_path)
+    out, _ = os.Create(trans_f_path)
     defer out.Close()
 
-    trans_f_path := current_dir + "/rotate180_" + img_name
     jpeg.Encode(out, dst, nil)
 
-    g := gift.New(
-        gift.Rotate270()
+    g = gift.New(
+        gift.Rotate180(),
     )
 
-    dst := image.NewRGBA(g.Bounds(crop.Bounds()))
+    dst = image.NewRGBA(g.Bounds(crop.Bounds()))
     g.Draw(dst, crop)
 
-    out, _ := os.Create(crop_f_path)
+    trans_f_path = current_dir + "/rotate180_" + img_name
+    out, _ = os.Create(trans_f_path)
     defer out.Close()
 
-    trans_f_path := current_dir + "/rotate270_" + img_name
+    jpeg.Encode(out, dst, nil)
+
+    g = gift.New(
+        gift.Rotate270(),
+    )
+
+    dst = image.NewRGBA(g.Bounds(crop.Bounds()))
+    g.Draw(dst, crop)
+
+    trans_f_path = current_dir + "/rotate270_" + img_name
+    out, _ = os.Create(trans_f_path)
+    defer out.Close()
+
     jpeg.Encode(out, dst, nil)
 }
 

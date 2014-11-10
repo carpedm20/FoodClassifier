@@ -1,4 +1,6 @@
-0_make_label
+*.jpg
+0_pre-processing
+1_make_label
 food100_train_lmdb
 food100_val_lmdb
 *.caffemodel

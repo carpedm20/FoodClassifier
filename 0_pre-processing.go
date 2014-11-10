@@ -45,8 +45,25 @@ func crop(img_name string, crop_map map[string][]string, current_dir string) {
         gift.Crop(image.Rect(x0, y0, x1, y1)),
     )
 
-    dst := image.NewRGBA(g.Bounds(img.Bounds()))
-    g.Draw(dst, img)
+    crop := image.NewRGBA(g.Bounds(img.Bounds()))
+    g.Draw(crop, img)
+
+    crop_f_path := current_dir + "/crop_" + img_name
+    out, _ := os.Create(crop_f_path)
+    defer out.Close()
+
+    jpeg.Encode(out, crop, nil)
+
+    /**********
+     *  Flip
+     **********/
+
+    g := gift.New(
+        gift.FlipHorizontal(),
+    )
+
+    dst := image.NewRGBA(g.Bounds(crop.Bounds()))
+    g.Draw(dst, crop)
 
     crop_f_path := current_dir + "/crop_" + img_name
     out, _ := os.Create(crop_f_path)
@@ -54,16 +71,16 @@ func crop(img_name string, crop_map map[string][]string, current_dir string) {
 
     jpeg.Encode(out, dst, nil)
 
-    /***********
+        /***********
      *  Rotate
      ***********/
 
-    /*g := gift.New(
+    g := gift.New(
         gift.Rotate90()
     )
 
-    dst := image.NewRGBA(g.Bounds(img.Bounds()))
-    g.Draw(dst, img)
+    dst := image.NewRGBA(g.Bounds(crop.Bounds()))
+    g.Draw(dst, crop)
 
     out, _ := os.Create(crop_f_path)
     defer out.Close()
@@ -75,8 +92,8 @@ func crop(img_name string, crop_map map[string][]string, current_dir string) {
         gift.Rotate180()
     )
 
-    dst := image.NewRGBA(g.Bounds(img.Bounds()))
-    g.Draw(dst, img)
+    dst := image.NewRGBA(g.Bounds(crop.Bounds()))
+    g.Draw(dst, crop)
 
     out, _ := os.Create(crop_f_path)
     defer out.Close()
@@ -88,14 +105,14 @@ func crop(img_name string, crop_map map[string][]string, current_dir string) {
         gift.Rotate270()
     )
 
-    dst := image.NewRGBA(g.Bounds(img.Bounds()))
-    g.Draw(dst, img)
+    dst := image.NewRGBA(g.Bounds(crop.Bounds()))
+    g.Draw(dst, crop)
 
     out, _ := os.Create(crop_f_path)
     defer out.Close()
 
     trans_f_path := current_dir + "/rotate270_" + img_name
-    jpeg.Encode(out, dst, nil)*/
+    jpeg.Encode(out, dst, nil)
 }
 
 func main() {

@@ -58,7 +58,7 @@ func crop(img_name string, crop_map map[string][]string, current_dir string) {
      *  Rotate
      ***********/
 
-    g := gift.New(
+    /*g := gift.New(
         gift.Rotate90()
     )
 
@@ -95,7 +95,7 @@ func crop(img_name string, crop_map map[string][]string, current_dir string) {
     defer out.Close()
 
     trans_f_path := current_dir + "/rotate270_" + img_name
-    jpeg.Encode(out, dst, nil)
+    jpeg.Encode(out, dst, nil)*/
 }
 
 func main() {

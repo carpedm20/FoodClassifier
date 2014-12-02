@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 
 from skimage.io import imread
-from skimage import color, feature, filter
+from skimage import color, feature
 from skimage.transform import resize
 
 from sklearn.cross_validation import train_test_split
@@ -88,9 +88,6 @@ def get_histogram(k, feature_list, predicted_labels):
         hist[i] = current_hist
     return hist
 
-def reduce_sift(mapping):
-    return reduce(lambda x, y: np.concatenate((x, y), axis = 0), mapping)
-
 def classify_svm(train_features, train_labels, test_features):
     clf = svm.SVC(C = 0.005, kernel = 'linear', )
     clf.fit(train_features, train_labels)
@@ -103,19 +100,29 @@ def classify_logistic(train_features, train_labels, test_features):
 
     return clf.predict(test_features)
 
+def reduce_sift(mapping):
+    return np.concatenate(train_sift, axis = 0)
+    #return reduce(lambda x, y: np.concatenate((x, y), axis = 0), mapping)
+    a = mapping[0]
+    for i in mapping[1:]:
+        a=np.concatenate((a,i),axis=0)
+    return a
+
 print "\n [*] Creating process pool"
 
 pool = Pool(cv2.getNumberOfCPUs())
 
 print "\n [*] Training shift"
 train_sift = pool.map(get_sift, train_images)
+train_sift = [i for i in train_sift if i != None]
 print "\n [*] Reducing training shift"
-reduced_train_sift = reduce_sift(train_sift)
+reduced_train_sift = np.concatenate(train_sift, axis = 0)
 
 print "\n [*] Testing shift"
 test_sift = pool.map(get_sift, test_images)
+test_sift = [i for i in test_sift if i != None]
 print "\n [*] Reducing testing shift"
-reduced_test_sift = reduce_sift(test_sift)
+reduced_test_sift = np.concatenate(test_sift, axis = 0)
 
 print "\n [*] Kmeans fitting"
 k = 1000
@@ -130,26 +137,27 @@ print "\n [*] Creating histogram of sift"
 train_hist_features = get_histogram(k, train_sift, train_predicted)
 test_hist_features = get_histogram(k, test_sift, test_predicted)
 
-print "\n [*] Classifying SVM"
 pred = classify_svm(train_hist_features, train_labels, test_hist_features)
 
 result = []
 
+print "\n [*] Classifying SVM"
 correct = sum(1.0*(pred == test_labels))
 accuracy = correct / len(test_labels)
 result.append("SVM : " +str(accuracy)+ " (" +str(int(correct))+ "/" +str(len(test_labels))+ ")")
 
 pred = classify_logistic(train_hist_features, train_labels, test_hist_features)
+print "\n".join(result)
 
 print "\n [*] Classifying Regression"
 correct = sum(1.0*(pred == test_labels))
 accuracy = correct / len(test_labels)
 result.append("Logistic Regression : " +str(accuracy)+ " (" +str(int(correct))+ "/" +str(len(test_labels))+ ")")
+print "\n".join(result)
 
 from utils import *
 
 send_mail("Food finished", "<br/>".join(result))
-print "\n".join(result)
 
 #for test_feature, label in zip(test_features, test_labels):
 #    predict = classifier.predict(test_features)

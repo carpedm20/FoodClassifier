@@ -130,11 +130,7 @@ func main() {
     runtime.GOMAXPROCS(runtime.NumCPU())
 
     TRAIN_DATA_ROOT := "/home/carpedm20/data/food100"
-<<<<<<< Updated upstream
     //TRAIN_DATA_ROOT := "/Users/carpedm20/data/food100"
-=======
-    //TRAIN_DATA_ROOT := "/Users/carpedm20/data/food100/"
->>>>>>> Stashed changes
 
     //files := []string{"7.jpg", "30.jpg", "35.jpg"}
     files, _ := ioutil.ReadDir(TRAIN_DATA_ROOT)
@@ -143,13 +139,8 @@ func main() {
 
     for _, parent := range files {
         if (parent.Name() != "Linux_doc" && parent.IsDir()) {
-<<<<<<< Updated upstream
             current_dir := TRAIN_DATA_ROOT + "/" + parent.Name()
             //current_dir := TRAIN_DATA_ROOT + "/21"
-=======
-            //current_dir := TRAIN_DATA_ROOT + "/" + parent.Name()
-            current_dir := TRAIN_DATA_ROOT + "/21"
->>>>>>> Stashed changes
             fmt.Println("[*] Start : " + current_dir)
             crop_info, err := os.Open(current_dir + "/bb_info.txt")
 

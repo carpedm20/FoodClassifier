@@ -9,7 +9,7 @@ from email.MIMEImage import MIMEImage
 
 from config import *
 
-def send_mail(text, filename=''):
+def send_mail(text, content, filename=''):
     global email_username, email_password
     fromaddr = 'hexa.portal@gmail.com'
 
@@ -27,7 +27,7 @@ def send_mail(text, filename=''):
     msgAlternative = MIMEMultipart('alternative')
     msgRoot.attach(msgAlternative)
 
-    msgText = MIMEText("Finished", 'html')
+    msgText = MIMEText(content, 'html')
     msgAlternative.attach(msgText)
 
     if filename is not '':

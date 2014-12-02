@@ -121,15 +121,22 @@ test_hist_features = get_histogram(k, test_sift, test_predicted)
 
 pred = classify_svm(train_hist_features, train_labels, test_hist_features)
 
+result = []
+
 correct = sum(1.0*(pred == test_labels))
 accuracy = correct / len(test_labels)
-print "SVM : " +str(accuracy)+ " (" +str(int(correct))+ "/" +str(len(test_labels))+ ")"
+result.append("SVM : " +str(accuracy)+ " (" +str(int(correct))+ "/" +str(len(test_labels))+ ")")
 
 pred = classify_logistic(train_hist_features, train_labels, test_hist_features)
 
 correct = sum(1.0*(pred == test_labels))
 accuracy = correct / len(test_labels)
-print "Logistic Regression : " +str(accuracy)+ " (" +str(int(correct))+ "/" +str(len(test_labels))+ ")"
+result.append("Logistic Regression : " +str(accuracy)+ " (" +str(int(correct))+ "/" +str(len(test_labels))+ ")")
+
+from utils import *
+
+send_mail("Food finished", "<br/>".join(result))
+print "\n".join(result)
 
 #for test_feature, label in zip(test_features, test_labels):
 #    predict = classifier.predict(test_features)

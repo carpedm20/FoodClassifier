@@ -1,3 +1,7 @@
+import timeit
+import cPickle
+from time import gmtime, strftime
+
 from random import shuffle
 import numpy as np
 import cv2
@@ -19,6 +23,7 @@ from multiprocessing import Pool
 from caffe_io import resize_image, oversample
 
 TEST = False
+SAVE = True
 FOOD_PATH = "/home/carpedm20/data/food100/"
 
 SINGLE_FOOD = "/home/carpedm20/data/food100/%s/crop_*.jpg"
@@ -89,14 +94,26 @@ def get_histogram(k, feature_list, predicted_labels):
     return hist
 
 def classify_svm(train_features, train_labels, test_features):
+    global SAVE
     clf = svm.SVC(C = 0.005, kernel = 'linear', )
     clf.fit(train_features, train_labels)
+
+    if SAVE:
+        file_name = "svm%s.pkl" % strftime("%m-%d-%H-%M", gmtime())
+        with open(file_name, "wb") as f:
+            cPickle.dump(clf, f)
 
     return clf.predict(test_features)
 
 def classify_logistic(train_features, train_labels, test_features):
+    global SAVE
     clf = LogisticRegression()
     clf.fit(train_features, train_labels)
+
+    if SAVE:
+        file_name = "logistic%s.pkl" % strftime("%m-%d-%H-%M", gmtime())
+        with open(file_name, "wb") as f:
+            cPickle.dump(clf, f)
 
     return clf.predict(test_features)
 
@@ -134,20 +151,36 @@ test_sift = removing_null(test_sift_with_null, test_labels)
 print "\n [*] Reducing testing shift"
 reduced_test_sift = np.concatenate(test_sift, axis = 0)
 
+start = timeit.default_timer()
 print "\n [*] Kmeans fitting"
 k = 1000
 kmeans = MiniBatchKMeans(n_clusters = k, batch_size = 1000, max_iter = 250)
 kmeans.fit(reduced_train_sift)
+stop = timeit.default_timer()
 
+print "\n => Kmeans learning time %s" % (stop - start)
+
+if SAVE:
+    file_name = "kmeans%s.pkl" % strftime("%m-%d-%H-%M", gmtime())
+    with open(file_name, "wb") as f:
+        cPickle.dump(kmeans, f)
+
+start = timeit.default_timer()
 print "\n [*] Predicting sift"
 train_predicted = kmeans.predict(reduced_train_sift)
 test_predicted = kmeans.predict(reduced_test_sift)
+stop = timeit.default_timer()
+
+print "\n => Kmeans prediction time %s" % (stop - start)
 
 print "\n [*] Creating histogram of sift"
 train_hist_features = get_histogram(k, train_sift, train_predicted)
 test_hist_features = get_histogram(k, test_sift, test_predicted)
 
+start = timeit.default_timer()
 pred = classify_svm(train_hist_features, train_labels, test_hist_features)
+stop = timeit.default_timer()
+print "\n => SVM prediction time %s" % (stop - start)
 
 result = []
 
@@ -156,8 +189,11 @@ correct = sum(1.0*(pred == test_labels))
 accuracy = correct / len(test_labels)
 result.append("SVM : " +str(accuracy)+ " (" +str(int(correct))+ "/" +str(len(test_labels))+ ")")
 
+start = timeit.default_timer()
 pred = classify_logistic(train_hist_features, train_labels, test_hist_features)
 print "\n".join(result)
+stop = timeit.default_timer()
+print "\n => Logistic prediction time %s" % (stop - start)
 
 print "\n [*] Classifying Regression"
 correct = sum(1.0*(pred == test_labels))

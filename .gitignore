@@ -1,3 +1,4 @@
+config.py
 *.jpg
 0_pre-processing
 1_make_label

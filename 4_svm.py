@@ -61,6 +61,8 @@ train_labels = [int(x[1]) for x in train]
 test_images = [x[0] for x in test]
 test_labels = [int(x[1]) for x in test]
 
+print "\n [*] Ready for learning"
+
 def get_sift(img):
     raw = cv2.imread(img)
     gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
@@ -101,24 +103,34 @@ def classify_logistic(train_features, train_labels, test_features):
 
     return clf.predict(test_features)
 
+print "\n [*] Creating process pool"
+
 pool = Pool(cv2.getNumberOfCPUs())
 
+print "\n [*] Training shift"
 train_sift = pool.map(get_sift, train_images)
+print "\n [*] Reducing training shift"
 reduced_train_sift = reduce_sift(train_sift)
 
+print "\n [*] Testing shift"
 test_sift = pool.map(get_sift, test_images)
+print "\n [*] Reducing testing shift"
 reduced_test_sift = reduce_sift(test_sift)
 
+print "\n [*] Kmeans fitting"
 k = 1000
 kmeans = MiniBatchKMeans(n_clusters = k, batch_size = 1000, max_iter = 250)
 kmeans.fit(reduced_train_sift)
 
+print "\n [*] Predicting sift"
 train_predicted = kmeans.predict(reduced_train_sift)
 test_predicted = kmeans.predict(reduced_test_sift)
 
+print "\n [*] Creating histogram of sift"
 train_hist_features = get_histogram(k, train_sift, train_predicted)
 test_hist_features = get_histogram(k, test_sift, test_predicted)
 
+print "\n [*] Classifying SVM"
 pred = classify_svm(train_hist_features, train_labels, test_hist_features)
 
 result = []
@@ -129,6 +141,7 @@ result.append("SVM : " +str(accuracy)+ " (" +str(int(correct))+ "/" +str(len(tes
 
 pred = classify_logistic(train_hist_features, train_labels, test_hist_features)
 
+print "\n [*] Classifying Regression"
 correct = sum(1.0*(pred == test_labels))
 accuracy = correct / len(test_labels)
 result.append("Logistic Regression : " +str(accuracy)+ " (" +str(int(correct))+ "/" +str(len(test_labels))+ ")")

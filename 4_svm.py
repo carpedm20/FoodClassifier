@@ -108,19 +108,29 @@ def reduce_sift(mapping):
         a=np.concatenate((a,i),axis=0)
     return a
 
+def removing_null(data, labels):
+    new_data = []
+    for idx, i in enumerate(data):
+        if i != None:
+            new_data.append(i)
+        else:
+            print "Find null : %s" % idx
+            del labels[idx]
+    return new_data
+
 print "\n [*] Creating process pool"
 
 pool = Pool(cv2.getNumberOfCPUs())
 
 print "\n [*] Training shift"
-train_sift = pool.map(get_sift, train_images)
-train_sift = [i for i in train_sift if i != None]
+train_sift_with_null = pool.map(get_sift, train_images)
+train_sift = removing_null(train_sift_with_null, train_labels)
 print "\n [*] Reducing training shift"
 reduced_train_sift = np.concatenate(train_sift, axis = 0)
 
 print "\n [*] Testing shift"
-test_sift = pool.map(get_sift, test_images)
-test_sift = [i for i in test_sift if i != None]
+test_sift_with_null = pool.map(get_sift, test_images)
+test_sift = removing_null(test_sift_with_null, test_labels)
 print "\n [*] Reducing testing shift"
 reduced_test_sift = np.concatenate(test_sift, axis = 0)
 

@@ -1,8 +1,5 @@
 from random import shuffle
-
 import numpy as np
-import mahotas as mh
-
 import cv2
 
 from skimage.io import imread
@@ -93,7 +90,7 @@ def reduce_sift(mapping):
     return reduce(lambda x, y: np.concatenate((x, y), axis = 0), mapping)
 
 def classify_svm(train_features, train_labels, test_features):
-    clf = svm.svc(c = 0.005, kernel = 'linear', )
+    clf = svm.SVC(C = 0.005, kernel = 'linear', )
     clf.fit(train_features, train_labels)
 
     return clf.predict(test_features)

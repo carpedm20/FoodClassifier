@@ -21,7 +21,7 @@ from multiprocessing import Pool
 
 from caffe_io import resize_image, oversample
 
-TEST = True
+TEST = False
 FOOD_PATH = "/home/carpedm20/data/food100/"
 
 SINGLE_FOOD = "/home/carpedm20/data/food100/%s/crop_*.jpg"
@@ -35,7 +35,7 @@ if TEST:
     print "food3 : %s" % len(food3)
     foods = food1 + food2 + food3
 else:
-    foods = glob.glob("/home/carpedm20/data/food100/*/crop_*.jpg")
+    foods = glob("/home/carpedm20/data/food100/*/crop_*.jpg")
 
 def build_labels(foods):
     new_foods = []
@@ -53,7 +53,7 @@ shuffle(test)
 
 if TEST:
     train = train[:len(train)/50]
-    test = test[:len(train)/50]
+    test = test[:len(test)/50]
 
 print "\ntrain : %s" % len(train)
 print "test : %s" % len(test)
@@ -83,51 +83,58 @@ def get_hist_feature(sift_features, predicted_labels):
     return hist
 
 def get_histogram(k, feature_list, predicted_labels):
-    feature_num = [f.shape[0] for f in feature_list]
-    hist = np.zeros(shape = (len(feature_num), k))
-    for i, num in enumerate(feature_num):
-        labels = predicted_labels[:num]
-        for label in labels:
-            hist[i, label] = hist[i, label] + 1
-        predicted_labels = predicted_labels[num:]
+    hist = np.zeros(shape = (len(feature_list), k))
+    for i, feature in enumerate(feature_list):
+        current_hist, bins = np.histogram(feature, bins=k)
+        hist[i] = current_hist
     return hist
 
 def reduce_sift(mapping):
     return reduce(lambda x, y: np.concatenate((x, y), axis = 0), mapping)
 
-def classify(train_features, train_labels, test_features):
-    clf = svm.SVC(C = 0.005, kernel = 'linear', )
+def classify_svm(train_features, train_labels, test_features):
+    clf = svm.svc(c = 0.005, kernel = 'linear', )
     clf.fit(train_features, train_labels)
-    #clf = LogisticRegression()
-    #clf.fit(train_features, train_labels)
-    predicted_labels = clf.predict(test_features)
-    return predicted_labels
 
-def main():
-    p = Pool(cv2.getNumberOfCPUs())
+    return clf.predict(test_features)
 
-    train_sift = reduce_sift(p.map(get_sift, train_images))
-    test_sift = reduce_sift(p.map(get_sift, train_images))
+def classify_logistic(train_features, train_labels, test_features):
+    clf = LogisticRegression()
+    clf.fit(train_features, train_labels)
 
-    k = 1000
-    kmeans = MiniBatchKMeans(n_clusters = k, batch_size = 1000, max_iter = 250)
-    kmeans.fit(train_sift)
+    return clf.predict(test_features)
 
-    train_predicted = kmeans.predict(train_sift)
-    test_predicted = kmeans.predict(test_sift)
+pool = Pool(cv2.getNumberOfCPUs())
 
-    train_hist_features = get_histogram(k, train_sift, train_predicted)
-    test_hist_features = get_histogram(k, test_sift, test_predicted)
+train_sift = pool.map(get_sift, train_images)
+reduced_train_sift = reduce_sift(train_sift)
 
-    pred = classify(train_hist_features, train_labels, test_hist_features)
-    out = pd.DataFrame(pred, columns = ['label'])
-    out = out.astype(int)
-    out.index += 1
-    out.to_csv('sub1.csv', index_label = 'id')
+test_sift = pool.map(get_sift, test_images)
+reduced_test_sift = reduce_sift(test_sift)
 
-    #for test_feature, label in zip(test_features, test_labels):
-    #    predict = classifier.predict(test_features)
-    #    print "Real : %s, Predict : %s" % (label, predict)
+k = 1000
+kmeans = MiniBatchKMeans(n_clusters = k, batch_size = 1000, max_iter = 250)
+kmeans.fit(reduced_train_sift)
 
-if __name__ == "__main__":
-    main()
+train_predicted = kmeans.predict(reduced_train_sift)
+test_predicted = kmeans.predict(reduced_test_sift)
+
+train_hist_features = get_histogram(k, train_sift, train_predicted)
+test_hist_features = get_histogram(k, test_sift, test_predicted)
+
+pred = classify_svm(train_hist_features, train_labels, test_hist_features)
+
+correct = sum(1.0*(pred == test_labels))
+accuracy = correct / len(test_labels)
+print "SVM : " +str(accuracy)+ " (" +str(int(correct))+ "/" +str(len(test_labels))+ ")"
+
+pred = classify_logistic(train_hist_features, train_labels, test_hist_features)
+
+correct = sum(1.0*(pred == test_labels))
+accuracy = correct / len(test_labels)
+print "Logistic Regression : " +str(accuracy)+ " (" +str(int(correct))+ "/" +str(len(test_labels))+ ")"
+
+#for test_feature, label in zip(test_features, test_labels):
+#    predict = classifier.predict(test_features)
+#    print "Real : %s, Predict : %s" % (label, predict)
+

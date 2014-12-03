@@ -1,4 +1,5 @@
 import timeit
+import itertools
 from math import sqrt
 from multiprocessing import Pool
 
@@ -6,9 +7,9 @@ import cv2
 import numpy as np
 
 from sklearn import svm
-from sklearn.multiclass import OneVsRestClassifier
 from sklearn.cluster import KMeans
 from sklearn.cluster import MiniBatchKMeans
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.linear_model.logistic import LogisticRegression
 
 from utils import *
@@ -16,14 +17,13 @@ from utils import *
 import warnings
 warnings.filterwarnings("ignore")
 
-TEST = True 
+TEST = False
 SAVE = False
-LOWE = True
+LOWE = False
 
 train_images, train_labels, test_images, test_labels = get_train_test(TEST)
 
-pool = Pool(cv2.getNumberOfCPUs()-2)
-
+pool = Pool(cv2.getNumberOfCPUs())
 if LOWE:
     print " [!] Lowe's SIFT"
     train_sift_with_null = pool.map(get_sift_lowe, train_images)
@@ -32,7 +32,6 @@ else:
     print " [!] OpenCV2's SIFT"
     train_sift_with_null = pool.map(get_sift, train_images)
     test_sift_with_null = pool.map(get_sift, test_images)
-
 pool.terminate()                                                                                        
 
 train_sift = removing_null(train_sift_with_null, train_labels)
@@ -62,23 +61,31 @@ else:
                              init_size  = 1000,
                              batch_size = 1000)
 
-kmeans.fit(reduced_train_sift)
+all_descriptors = np.concatenate((reduced_train_sift,reduced_test_sift), axis=0)
+
+kmeans.fit(all_descriptors)
 stop = timeit.default_timer()
 
 print " => Kmeans time : %s" % (stop - start)
 if not TEST and SAVE:
     save_pickle("kmeans",kmeans)
 
-start = timeit.default_timer()
-train_predicted = kmeans.predict(reduced_train_sift)
-test_predicted = kmeans.predict(reduced_test_sift)
-stop = timeit.default_timer()
+print "\n [*] Spatial Pyramid Histogram calculation"
+pool = Pool(cv2.getNumberOfCPUs()-2)
 
-print "\n [*] Creating histogram of sift"
-train_hist_features = get_histogram(k, train_sift, train_predicted)
-test_hist_features = get_histogram(k, test_sift, test_predicted)
+#l=[]
+#for image in train_images:
+#    l.append(get_spatial_pyramid((image, kmeans.cluster_centers_, reduced_train_sift.shape[0])))
 
+tmp = itertools.repeat(kmeans.cluster_centers_)
+tmp2 = itertools.repeat(all_descriptors.shape[0])
+train_spp_hist = pool.map(get_spatial_pyramid, itertools.izip(train_images, tmp, tmp2))
 
+tmp = itertools.repeat(kmeans.cluster_centers_)
+tmp2 = itertools.repeat(all_descriptors.shape[0])
+test_spp_hist = pool.map(get_spatial_pyramid, itertools.izip(test_images, tmp, tmp2))
+
+pool.terminate()                                                                                        
 def classify_svm(train_features, train_labels, test_features):
     global SAVE
     #clf = svm.SVC(C = 0.005, kernel = 'linear', )
@@ -105,7 +112,7 @@ def classify_logistic(train_features, train_labels, test_features):
 print "\n [*] Classifying SVM"
 result = []
 start = timeit.default_timer()
-pred = classify_svm(train_hist_features, train_labels, test_hist_features)
+pred = classify_svm(train_spp_hist, train_labels, test_spp_hist)
 stop = timeit.default_timer()
 
 print " [=] SVM time : %s" % (stop - start)
@@ -118,7 +125,7 @@ print " [=] SVM result : ", "\n".join(result)
 print "\n [*] Classifying Regression"
 result = []
 start = timeit.default_timer()
-pred = classify_logistic(train_hist_features, train_labels, test_hist_features)
+pred = classify_logistic(train_spp_hist, train_labels, test_spp_hist)
 stop = timeit.default_timer()
 print " [=] LR time : %s" % (stop - start)
 

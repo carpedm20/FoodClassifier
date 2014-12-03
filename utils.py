@@ -52,7 +52,7 @@ def get_spatial_pyramid(args, level=2):
 
     keypoints, descriptors = get_sift(img, True)
 
-    histogramOfLevelTwo = np.zeros((16, num_of_descriptors))
+    histogramOfLevelTwo = np.zeros((16, num_of_descriptors), dtype=np.uint8)
     for (keypoint, feature) in zip(keypoints, descriptors):
         x = keypoint.pt[0]
         y = keypoint.pt[1]
@@ -65,7 +65,7 @@ def get_spatial_pyramid(args, level=2):
         histogramOfLevelTwo[boundaryIndex][codes[0]] += 1
 
     # level 1, based on histograms generated on level two
-    histogramOfLevelOne = np.zeros((4, num_of_descriptors))
+    histogramOfLevelOne = np.zeros((4, num_of_descriptors), dtype=np.uint8)
     histogramOfLevelOne[0] = histogramOfLevelTwo[0] + histogramOfLevelTwo[1] + histogramOfLevelTwo[4] + histogramOfLevelTwo[5]
     histogramOfLevelOne[1] = histogramOfLevelTwo[2] + histogramOfLevelTwo[3] + histogramOfLevelTwo[6] + histogramOfLevelTwo[7]
     histogramOfLevelOne[2] = histogramOfLevelTwo[8] + histogramOfLevelTwo[9] + histogramOfLevelTwo[12] + histogramOfLevelTwo[13]
@@ -169,8 +169,8 @@ def get_train_test(TEST):
 
     if TEST:
         #pass
-        train = train[:len(train)/5]
-        test = test[:len(test)/5]
+        train = train[:len(train)/50]
+        test = test[:len(test)/50]
 
     print "\ntrain : %s" % len(train)
     print "test : %s" % len(test)

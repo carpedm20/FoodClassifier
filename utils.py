@@ -164,8 +164,8 @@ def get_train_test(TEST):
 
     if TEST:
         #pass
-        train = train[:len(train)/2]
-        test = test[:len(test)/2]
+        train = train[:len(train)/5]
+        test = test[:len(test)/5]
 
     print "\ntrain : %s" % len(train)
     print "test : %s" % len(test)

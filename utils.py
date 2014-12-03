@@ -14,6 +14,16 @@ def save_pickle(name, obj):
     with open(file_name, "wb") as f:
         cPickle.dump(obj, f)
 
+def get_color_histogram(img):
+    raw = cv2.imread(img)
+    hists = []
+    color = ('b','g','r')
+    for i, col in enumerate(color):
+        hist = cv2.calcHist([raw],[i],None,[256],[0,255])
+        cv2.normalize(hist,hist,0,255,cv2.NORM_MINMAX)
+        hists.append(np.int32(np.around(hist)).reshape((len(hist),)))
+    return np.concatenate(hists, axis = 0)
+
 def get_sift(img):
     raw = cv2.imread(img)
     gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)

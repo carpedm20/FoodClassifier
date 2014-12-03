@@ -15,7 +15,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 TEST = False
-SAVE = True
+SAVE = False
 PREFIX = "COLOR"
 
 train_images, train_labels, test_images, test_labels = get_train_test(TEST)
@@ -40,7 +40,7 @@ def classify_logistic(train_features, train_labels, test_features):
 
     return clf.predict(test_features)
 
-pool = Pool(cv2.getNumberOfCPUs())
+pool = Pool(cv2.getNumberOfCPUs()-2)
 
 train_hist = pool.map(get_color_histogram, train_images)
 test_hist = pool.map(get_color_histogram, test_images)

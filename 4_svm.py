@@ -6,6 +6,7 @@ import cv2
 import numpy as np
 
 from sklearn import svm
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.cluster import KMeans
 from sklearn.cluster import MiniBatchKMeans
 from sklearn.linear_model.logistic import LogisticRegression
@@ -16,12 +17,12 @@ import warnings
 warnings.filterwarnings("ignore")
 
 TEST = True 
-SAVE = True
+SAVE = False
 LOWE = True
 
 train_images, train_labels, test_images, test_labels = get_train_test(TEST)
 
-pool = Pool(cv2.getNumberOfCPUs())
+pool = Pool(cv2.getNumberOfCPUs()-2)
 
 if LOWE:
     print " [!] Lowe's SIFT"
@@ -80,8 +81,9 @@ test_hist_features = get_histogram(k, test_sift, test_predicted)
 
 def classify_svm(train_features, train_labels, test_features):
     global SAVE
-    clf = svm.SVC(C = 0.005, kernel = 'linear', )
+    #clf = svm.SVC(C = 0.005, kernel = 'linear', )
     #clf = svm.SVC(C = 0.005, kernel = 'rbf', )
+    clf = OneVsRestClassifier(svm.LinearSVC())
     clf.fit(train_features, train_labels)
 
     if not TEST and SAVE:

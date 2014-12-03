@@ -9,6 +9,7 @@ import numpy as np
 from sklearn import svm
 from sklearn.cluster import KMeans
 from sklearn.cluster import MiniBatchKMeans
+from sklearn.multiclass import OneVsRestClassifier
 from sklearn.linear_model.logistic import LogisticRegression
 
 from utils import *
@@ -17,13 +18,12 @@ import warnings
 warnings.filterwarnings("ignore")
 
 TEST = True
-SAVE = True
-LOWE = True
+SAVE = False
+LOWE = False
 
 train_images, train_labels, test_images, test_labels = get_train_test(TEST)
 
 pool = Pool(cv2.getNumberOfCPUs())
-
 if LOWE:
     print " [!] Lowe's SIFT"
     train_sift_with_null = pool.map(get_sift_lowe, train_images)
@@ -32,8 +32,8 @@ else:
     print " [!] OpenCV2's SIFT"
     train_sift_with_null = pool.map(get_sift, train_images)
     test_sift_with_null = pool.map(get_sift, test_images)
-
 pool.terminate()                                                                                        
+
 train_sift = removing_null(train_sift_with_null, train_labels)
 reduced_train_sift = np.concatenate(train_sift, axis = 0)
 
@@ -61,7 +61,9 @@ else:
                              init_size  = 1000,
                              batch_size = 1000)
 
-kmeans.fit(reduced_train_sift)
+all_descriptors = np.concatenate((reduced_train_sift,reduced_test_sift), axis=0)
+
+kmeans.fit(all_descriptors)
 stop = timeit.default_timer()
 
 print " => Kmeans time : %s" % (stop - start)
@@ -69,26 +71,26 @@ if not TEST and SAVE:
     save_pickle("kmeans",kmeans)
 
 print "\n [*] Spatial Pyramid Histogram calculation"
-pool = Pool(cv2.getNumberOfCPUs())
+pool = Pool(cv2.getNumberOfCPUs()-2)
 
-l=[]
-
-for image in train_images:
-    l.append(get_spatial_pyramid((image, kmeans.cluster_centers_, reduced_train_sift.shape[0])))
+#l=[]
+#for image in train_images:
+#    l.append(get_spatial_pyramid((image, kmeans.cluster_centers_, reduced_train_sift.shape[0])))
 
 tmp = itertools.repeat(kmeans.cluster_centers_)
-tmp2 = itertools.repeat(reduced_train_sift.shape[0])
+tmp2 = itertools.repeat(all_descriptors.shape[0])
 train_spp_hist = pool.map(get_spatial_pyramid, itertools.izip(train_images, tmp, tmp2))
 
 tmp = itertools.repeat(kmeans.cluster_centers_)
-tmp2 = itertools.repeat(reduced_test_sift.shape[0])
+tmp2 = itertools.repeat(all_descriptors.shape[0])
 test_spp_hist = pool.map(get_spatial_pyramid, itertools.izip(test_images, tmp, tmp2))
 
 pool.terminate()                                                                                        
 def classify_svm(train_features, train_labels, test_features):
     global SAVE
-    clf = svm.SVC(C = 0.005, kernel = 'linear', )
+    #clf = svm.SVC(C = 0.005, kernel = 'linear', )
     #clf = svm.SVC(C = 0.005, kernel = 'rbf', )
+    clf = OneVsRestClassifier(svm.LinearSVC())
     clf.fit(train_features, train_labels)
 
     if not TEST and SAVE:

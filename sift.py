@@ -48,7 +48,7 @@ def process_image(imagename, resultname='temp.sift', dense=False):
             os.remove(resultname) # removing empty resultfile created by output redirection
             raise IOError("image " + imagename + " not found")            
         if os.path.getsize(resultname) == 0:
-            raise IOError("extracting SIFT features failed " + resultname)
+            return True
 
     else:
         import vlfeat

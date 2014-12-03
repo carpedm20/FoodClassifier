@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import cv2
 import math
 import cPickle
@@ -41,8 +42,8 @@ def get_spatial_pyramid(args, level=2):
     width = raw.shape[1]
     height = raw.shape[0]
 
-    w_step = math.ceil(width/4)
-    h_step = math.ceil(height/4)
+    w_step = math.ceil(width/4.0)
+    h_step = math.ceil(height/4.0)
 
     keypoints, descriptors = get_sift(img, True)
 
@@ -56,7 +57,6 @@ def get_spatial_pyramid(args, level=2):
         feature = feature.reshape(1, shape)
 
         codes, distance = vq(feature, cluster_centers)
-        print img, x, y, width, height, histogramOfLevelTwo.shape, boundaryIndex, codes
         histogramOfLevelTwo[boundaryIndex][codes[0]] += 1
 
     # level 1, based on histograms generated on level two
@@ -87,7 +87,13 @@ def get_spatial_pyramid(args, level=2):
 
 def get_sift_lowe(img):
     features_fname = img + '.sift'
-    if exists(features_fname) == False:
+    if os.path.isfile(features_fname) == False:
+        is_size_zero = sift.process_image(img, features_fname)
+        if is_size_zero:
+            os.remove(features_fname)
+            sift.process_image(img, features_fname)
+    if os.path.isfile(features_fname) and os.path.getsize(features_fname) == 0:
+        os.remove(features_fname)
         sift.process_image(img, features_fname)
     locs, desc = sift.read_features_from_file(features_fname)
     return desc
@@ -157,8 +163,9 @@ def get_train_test(TEST):
         shuffle(test)
 
     if TEST:
-        train = train[:len(train)/10]
-        test = test[:len(test)/10]
+        #pass
+        train = train[:len(train)/2]
+        test = test[:len(test)/2]
 
     print "\ntrain : %s" % len(train)
     print "test : %s" % len(test)

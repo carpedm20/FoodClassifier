@@ -1,4 +1,5 @@
 import timeit
+from math import sqrt
 from multiprocessing import Pool
 
 import cv2
@@ -16,13 +17,20 @@ warnings.filterwarnings("ignore")
 
 TEST = False
 SAVE = True
+LOWE = True
 
 train_images, train_labels, test_images, test_labels = get_train_test(TEST)
 
 pool = Pool(cv2.getNumberOfCPUs())
 
-train_sift_with_null = pool.map(get_sift, train_images)
-test_sift_with_null = pool.map(get_sift, test_images)
+if LOWE:
+    print " [!] Lowe's SIFT"
+    train_sift_with_null = pool.map(get_sift_lowe, train_images)
+    test_sift_with_null = pool.map(get_sift_lowe, test_images)
+else:
+    print " [!] OpenCV2's SIFT"
+    train_sift_with_null = pool.map(get_sift, train_images)
+    test_sift_with_null = pool.map(get_sift, test_images)
 
 pool.terminate()                                                                                        
 

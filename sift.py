@@ -1,4 +1,6 @@
 """ 
+This code is based on https://github.com/shackenberg/Minimal-Bag-of-Visual-Words-Image-Classifier
+
 Python module for use with David Lowe's SIFT code available at:
 http://www.cs.ubc.ca/~lowe/keypoints/
 adapted from the matlab code examples.
@@ -21,7 +23,6 @@ WRITE_VERBOSE = False  # no verbose reading atm
 
 def process_image(imagename, resultname='temp.sift', dense=False):    
     """ process an image and save the results in a .key ascii file"""
-    print "working on ", imagename
     if dense == False:
         if imagename[-3:] != 'pgm':
             #create a pgm file, image is resized, if it is too big.

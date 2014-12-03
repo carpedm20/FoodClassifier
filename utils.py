@@ -10,6 +10,10 @@ from time import gmtime, strftime
 from skimage.io import imread
 from sklearn.cross_validation import train_test_split
 
+from scipy.cluster.vq import *
+
+import sift
+
 def save_pickle(name, obj):
     file_name = "%s_%s.pkl" % (name, strftime("%m%d-%H%M", gmtime()))
     with open(file_name, "wb") as f:
@@ -26,25 +30,81 @@ def get_color_histogram(img):
         hists.append(np.int32(np.around(hist)).reshape((len(hist),)))
     return np.concatenate(hists, axis = 0)
 
-def get_sift(img, is_lowe=True):
-    if is_lowe:
-        features_fname = img + '.sift'
-        if exists(features_fname) == False:
-            sift.process_image(img, features_fname)
-        locs, desc = sift.read_features_from_file(features_fname)
+def get_spatial_pyramid(img, cluster_centers, level = 2):
+    """
+    Code is based on https://github.com/wihoho/Image-Recognition/blob/6ef9159abdc8a282629f47761cefcf0c6b843184/Utility.py
+    """
+    raw = cv2.imread(img)                                                                               
+    width = raw.width
+    height = raw.height
 
+    w_step = int(width/4)
+    h_step = int(height/4)
+
+    keypoints, descriptors = get_sift(img)
+
+    histogramOfLevelTwo = np.zeros((16, descriptors.shape[0]))
+    for (keypoint, feature) in zip(keypoints, descriptors):
+        x = keypoint.pt[0]
+        y = keypoint.pt[1]
+        boundaryIndex = int(x / widthStep)  + int(y / heightStep) *4
+
+        shape = feature.shape[0]
+        feature = feature.reshape(1, shape)
+
+        codes, distance = vq(feature, cluster_centers)
+        histogramOfLevelTwo[boundaryIndex][codes[0]] += 1
+
+    # level 1, based on histograms generated on level two
+    histogramOfLevelOne = np.zeros((4, self.size))
+    histogramOfLevelOne[0] = histogramOfLevelTwo[0] + histogramOfLevelTwo[1] + histogramOfLevelTwo[4] + histogramOfLevelTwo[5]
+    histogramOfLevelOne[1] = histogramOfLevelTwo[2] + histogramOfLevelTwo[3] + histogramOfLevelTwo[6] + histogramOfLevelTwo[7]
+    histogramOfLevelOne[2] = histogramOfLevelTwo[8] + histogramOfLevelTwo[9] + histogramOfLevelTwo[12] + histogramOfLevelTwo[13]
+    histogramOfLevelOne[3] = histogramOfLevelTwo[10] + histogramOfLevelTwo[11] + histogramOfLevelTwo[14] + histogramOfLevelTwo[15]
+
+    # level 0
+    histogramOfLevelZero = histogramOfLevelOne[0] + histogramOfLevelOne[1] + histogramOfLevelOne[2] + histogramOfLevelOne[3]
+
+    if level == 0:
+        return histogramOfLevelZero
+    elif level == 1:
+        tempZero = histogramOfLevelZero.flatten() * 0.5
+        tempOne = histogramOfLevelOne.flatten() * 0.5
+        result = np.concatenate((tempZero, tempOne))
+        return result
+    elif level == 2:
+        tempZero = histogramOfLevelZero.flatten() * 0.25
+        tempOne = histogramOfLevelOne.flatten() * 0.25
+        tempTwo = histogramOfLevelTwo.flatten() * 0.5
+        result = np.concatenate((tempZero, tempOne, tempTwo))
+        return result
     else:
-        raw = cv2.imread(img)
-        gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
-        #sift = cv2.SURF()
-        sift = cv2.SIFT()
-        """sift = cv2.SIFT(nfeatures=1000,
-                        nOctaveLayers=3,
-                        contrastThreshold=0.04,
-                        edgeThreshold=5)"""
-        kp, desc = sift.detectAndCompute(gray, None)
-    #print img, gray.shape, len(kp), desc.shape
+        return None
+
+
+def get_sift_lowe(img):
+    features_fname = img + '.sift'
+    if exists(features_fname) == False:
+        sift.process_image(img, features_fname)
+    locs, desc = sift.read_features_from_file(features_fname)
     return desc
+
+def get_sift(img, with_kp=False):
+    raw = cv2.imread(img)
+    gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
+    #descriptor = cv2.SURF()
+    descriptor = cv2.SIFT()
+    """descriptor = cv2.SIFT(nfeatures=1000,
+                    nOctaveLayers=3,
+                    contrastThreshold=0.04,
+                    edgeThreshold=5)"""
+    kp, desc = descriptor.detectAndCompute(gray, None)
+    #print img, gray.shape, len(kp), desc.shape
+
+    if with_kp:
+        return kp, desc
+    else:
+        return desc
 
 def get_histogram(k, feature_list, predicted_labels):
     hist = np.zeros(shape = (len(feature_list), k))

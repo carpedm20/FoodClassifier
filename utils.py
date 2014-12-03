@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import math
 import cPickle
 from os.path import exists, isdir, basename, join, splitext
 
@@ -10,7 +11,7 @@ from time import gmtime, strftime
 from skimage.io import imread
 from sklearn.cross_validation import train_test_split
 
-from scipy.cluster.vq import *
+from scipy.cluster.vq import vq
 
 import sift
 
@@ -30,33 +31,36 @@ def get_color_histogram(img):
         hists.append(np.int32(np.around(hist)).reshape((len(hist),)))
     return np.concatenate(hists, axis = 0)
 
-def get_spatial_pyramid(img, cluster_centers, level = 2):
+def get_spatial_pyramid(args, level=2):
     """
     Code is based on https://github.com/wihoho/Image-Recognition/blob/6ef9159abdc8a282629f47761cefcf0c6b843184/Utility.py
     """
+    img, cluster_centers, num_of_descriptors = args
+
     raw = cv2.imread(img)                                                                               
-    width = raw.width
-    height = raw.height
+    width = raw.shape[1]
+    height = raw.shape[0]
 
-    w_step = int(width/4)
-    h_step = int(height/4)
+    w_step = math.ceil(width/4)
+    h_step = math.ceil(height/4)
 
-    keypoints, descriptors = get_sift(img)
+    keypoints, descriptors = get_sift(img, True)
 
-    histogramOfLevelTwo = np.zeros((16, descriptors.shape[0]))
+    histogramOfLevelTwo = np.zeros((16, num_of_descriptors))
     for (keypoint, feature) in zip(keypoints, descriptors):
         x = keypoint.pt[0]
         y = keypoint.pt[1]
-        boundaryIndex = int(x / widthStep)  + int(y / heightStep) *4
+        boundaryIndex = int(x / w_step)  + int(y / h_step) *4
 
         shape = feature.shape[0]
         feature = feature.reshape(1, shape)
 
         codes, distance = vq(feature, cluster_centers)
+        print img, x, y, width, height, histogramOfLevelTwo.shape, boundaryIndex, codes
         histogramOfLevelTwo[boundaryIndex][codes[0]] += 1
 
     # level 1, based on histograms generated on level two
-    histogramOfLevelOne = np.zeros((4, self.size))
+    histogramOfLevelOne = np.zeros((4, num_of_descriptors))
     histogramOfLevelOne[0] = histogramOfLevelTwo[0] + histogramOfLevelTwo[1] + histogramOfLevelTwo[4] + histogramOfLevelTwo[5]
     histogramOfLevelOne[1] = histogramOfLevelTwo[2] + histogramOfLevelTwo[3] + histogramOfLevelTwo[6] + histogramOfLevelTwo[7]
     histogramOfLevelOne[2] = histogramOfLevelTwo[8] + histogramOfLevelTwo[9] + histogramOfLevelTwo[12] + histogramOfLevelTwo[13]
@@ -80,7 +84,6 @@ def get_spatial_pyramid(img, cluster_centers, level = 2):
         return result
     else:
         return None
-
 
 def get_sift_lowe(img):
     features_fname = img + '.sift'

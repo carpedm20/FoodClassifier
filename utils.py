@@ -16,10 +16,15 @@ from scipy.cluster.vq import vq
 
 import sift
 
-def save_pickle(name, obj):
-    file_name = "%s_%s.pkl" % (name, strftime("%m%d-%H%M", gmtime()))
+def save_pickle(file_name, obj):
+    #file_name = "%s_%s.pkl" % (file_name, strftime("%m%d-%H%M", gmtime()))
     with open(file_name, "wb") as f:
         cPickle.dump(obj, f)
+
+def load_pickle(file_name):
+    #file_name = "%s_%s.pkl" % (file_name, strftime("%m%d-%H%M", gmtime()))
+    with open(file_name, "rb") as f:
+        return cPickle.load(f)
 
 def get_color_histogram(img):
     raw = cv2.imread(img)

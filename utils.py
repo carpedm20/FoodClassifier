@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import cPickle
+from os.path import exists, isdir, basename, join, splitext
 
 from glob import glob
 from random import shuffle
@@ -20,20 +21,28 @@ def get_color_histogram(img):
     color = ('b','g','r')
     for i, col in enumerate(color):
         hist = cv2.calcHist([raw],[i],None,[256],[0,255])
+        #hist = cv2.calcHist([raw],[i],None,[4],[0,255])
         cv2.normalize(hist,hist,0,255,cv2.NORM_MINMAX)
         hists.append(np.int32(np.around(hist)).reshape((len(hist),)))
     return np.concatenate(hists, axis = 0)
 
-def get_sift(img):
-    raw = cv2.imread(img)
-    gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
-    #sift = cv2.SURF()
-    sift = cv2.SIFT()
-    """sift = cv2.SIFT(nfeatures=1000,
-                    nOctaveLayers=3,
-                    contrastThreshold=0.04,
-                    edgeThreshold=5)"""
-    kp, desc = sift.detectAndCompute(gray, None)
+def get_sift(img, is_lowe=True):
+    if is_lowe:
+        features_fname = img + '.sift'
+        if exists(features_fname) == False:
+            sift.process_image(img, features_fname)
+        locs, desc = sift.read_features_from_file(features_fname)
+
+    else:
+        raw = cv2.imread(img)
+        gray = cv2.cvtColor(raw, cv2.COLOR_BGR2GRAY)
+        #sift = cv2.SURF()
+        sift = cv2.SIFT()
+        """sift = cv2.SIFT(nfeatures=1000,
+                        nOctaveLayers=3,
+                        contrastThreshold=0.04,
+                        edgeThreshold=5)"""
+        kp, desc = sift.detectAndCompute(gray, None)
     #print img, gray.shape, len(kp), desc.shape
     return desc
 

@@ -45,6 +45,8 @@ pool = Pool(cv2.getNumberOfCPUs())
 train_hist = pool.map(get_color_histogram, train_images)
 test_hist = pool.map(get_color_histogram, test_images)
 
+pool.terminate()
+
 print "\n ["+PREFIX+"][*] Classifying SVM"
 result = []
 start = timeit.default_timer()

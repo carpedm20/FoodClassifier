@@ -19,39 +19,25 @@ SAVE = True
 
 train_images, train_labels, test_images, test_labels = get_train_test(TEST)
 
-def classify_svm(train_features, train_labels, test_features):
-    global SAVE
-    clf = svm.SVC(C = 0.005, kernel = 'linear', )
-    clf.fit(train_features, train_labels)
-
-    if not TEST and SAVE:
-        save_pickle("svm", clf)
-
-    return clf.predict(test_features)
-
-def classify_logistic(train_features, train_labels, test_features):
-    global SAVE
-    clf = LogisticRegression()
-    clf.fit(train_features, train_labels)
-
-    if not TEST and SAVE:
-        save_pickle("logistic", clf)
-
-    return clf.predict(test_features)
-
 pool = Pool(cv2.getNumberOfCPUs())
 
 train_sift_with_null = pool.map(get_sift, train_images)
+test_sift_with_null = pool.map(get_sift, test_images)
+
+pool.terminate()                                                                                        
+
 train_sift = removing_null(train_sift_with_null, train_labels)
 reduced_train_sift = np.concatenate(train_sift, axis = 0)
 
-test_sift_with_null = pool.map(get_sift, test_images)
 test_sift = removing_null(test_sift_with_null, test_labels)
 reduced_test_sift = np.concatenate(test_sift, axis = 0)
 
 print "\n [*] Kmeans fitting"
 start = timeit.default_timer()
 k = 1000
+
+nfeatures = reduced_train_sift.shape[0]
+k = int(sqrt(nfeatures))
 
 if False:
     kmeans = KMeans(n_clusters = k,
@@ -82,6 +68,28 @@ stop = timeit.default_timer()
 print "\n [*] Creating histogram of sift"
 train_hist_features = get_histogram(k, train_sift, train_predicted)
 test_hist_features = get_histogram(k, test_sift, test_predicted)
+
+
+def classify_svm(train_features, train_labels, test_features):
+    global SAVE
+    clf = svm.SVC(C = 0.005, kernel = 'linear', )
+    clf.fit(train_features, train_labels)
+
+    if not TEST and SAVE:
+        save_pickle("svm", clf)
+
+    return clf.predict(test_features)
+
+def classify_logistic(train_features, train_labels, test_features):
+    global SAVE
+    clf = LogisticRegression()
+    clf.fit(train_features, train_labels)
+
+    if not TEST and SAVE:
+        save_pickle("logistic", clf)
+
+    return clf.predict(test_features)
+
 
 print "\n [*] Classifying SVM"
 result = []

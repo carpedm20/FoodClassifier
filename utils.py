@@ -148,7 +148,21 @@ def get_train_test(TEST):
         print "food2 : %s" % len(food2)
         food3 = glob(SINGLE_FOOD % '23')
         print "food3 : %s" % len(food3)
-        foods = food1 + food2 + food3
+        food4 = glob(SINGLE_FOOD % '17')
+        print "food4 : %s" % len(food4)
+        food5 = glob(SINGLE_FOOD % '12')
+        print "food5 : %s" % len(food5)
+        food6 = glob(SINGLE_FOOD % '87')
+        print "food6 : %s" % len(food6)
+        food7 = glob(SINGLE_FOOD % '19')
+        print "food7 : %s" % len(food7)
+        food8 = glob(SINGLE_FOOD % '22')
+        print "food8 : %s" % len(food8)
+        food9 = glob(SINGLE_FOOD % '20')
+        print "food9 : %s" % len(food9)
+        food10 = glob(SINGLE_FOOD % '16')
+        print "food10 : %s" % len(food10)
+        foods = food1+food2+food3+food4+food5+food6+food7+food8+food9+food10
     else:
         foods = glob("/home/carpedm20/data/food100/*/crop_*.jpg")
 
@@ -163,14 +177,15 @@ def get_train_test(TEST):
 
     train, test = train_test_split(foods, test_size=0.33, random_state=42)
 
-    if not TEST:
+    #if not TEST:
+    if True:
         shuffle(train)
         shuffle(test)
 
     if TEST:
-        #pass
-        train = train[:len(train)/50]
-        test = test[:len(test)/50]
+        pass
+        #train = train[:len(train)/50]
+        #test = test[:len(test)/50]
 
     print "\ntrain : %s" % len(train)
     print "test : %s" % len(test)

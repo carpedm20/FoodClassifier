@@ -1,4 +1,5 @@
 *.pkl
+matlab
 config.py
 *.jpg
 0_pre-processing
